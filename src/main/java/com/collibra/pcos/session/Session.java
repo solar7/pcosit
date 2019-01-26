@@ -5,15 +5,13 @@ public class Session {
     private static final String DEFAULT_CLIENT_NAME = "ANONYMOUS";
 
     private final String sessionId;
-    private final WatchDog watchDog;
     private final long sessionOpenedTimeMs;
     private boolean goodByeFlag;
-    private volatile long lastAccessTimeMs;
+    private long lastAccessTimeMs;
 
     private String clientName = DEFAULT_CLIENT_NAME;
 
     public Session(String sessionId) {
-        this.watchDog = new WatchDog(sessionId, this::getIdleTimeInMs);
         this.lastAccessTimeMs = System.currentTimeMillis();
         this.sessionOpenedTimeMs = System.currentTimeMillis();
         this.sessionId = sessionId;
@@ -45,15 +43,7 @@ public class Session {
         lastAccessTimeMs = System.currentTimeMillis();
     }
 
-    public void startSessionWatchDog() {
-        watchDog.schedule();
-    }
-
-    public void stopSessionWatchDog() {
-        watchDog.cancel();
-    }
-
-    public void goodByeWasSaid() {
+    public void setGoodByeSaidFlag() {
         goodByeFlag = true;
     }
 

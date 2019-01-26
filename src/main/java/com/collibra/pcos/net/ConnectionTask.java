@@ -10,12 +10,15 @@ import org.slf4j.Logger;
 
 import java.net.Socket;
 
+import static com.collibra.pcos.properties.ApplicationProperties.SERVER_TIMEOUT;
 import static com.collibra.pcos.utils.ApplicationContext.getBean;
 import static java.lang.Thread.currentThread;
 
 class ConnectionTask implements Runnable {
 
     private static final Logger LOGGER = LoggerUtils.getLogger();
+
+    private final int SESSION_TIMEOUT_MS = SERVER_TIMEOUT.getIntValue();
 
     private final Socket socket;
 
@@ -31,10 +34,10 @@ class ConnectionTask implements Runnable {
         Session session = sessionFactory.createNewSession();
         try (Connection connection = new Connection(socket, session, this::beforeClosingConnection)) {
             afterOpeningConnection(connection);
-            while (!currentThread().isInterrupted()) {
+            while (checkSessionTimeout(session) && !currentThread().isInterrupted()) {
                 if (connection.isReady()) {
-                    session.registerClientActivity();
                     processCommand(connection.readLn(), connection);
+                    session.registerClientActivity();
                 }
             }
         } catch (Exception e) {
@@ -57,7 +60,7 @@ class ConnectionTask implements Runnable {
         result.getOut().ifPresent((out) -> printOutput(out, connection));
 
         if (ExecCode.TERMINATE == result.getCode()) {
-            handleTerminateCommand(session);
+            currentThread().interrupt();
         }
     }
 
@@ -66,14 +69,8 @@ class ConnectionTask implements Runnable {
         LOGGER.info("session {} << [{}]", connection.getSession().getSessionId(), out);
     }
 
-    private void handleTerminateCommand(Session session) {
-        session.goodByeWasSaid();
-        currentThread().interrupt();
-    }
-
     private void beforeClosingConnection(Connection connection) {
         sayGoodBye(connection);
-        connection.getSession().stopSessionWatchDog();
         LOGGER.info("successfully closed {}", connection.getSession().getSessionId());
     }
 
@@ -82,6 +79,17 @@ class ConnectionTask implements Runnable {
         if (!session.wasGoodByeSaid()) {
             ExecResult execResult = commandProcessor.execSayGoodBye(session);
             execResult.getOut().ifPresent(connection::println);
+        }
+    }
+
+    private boolean checkSessionTimeout(Session session) {
+        long idleTimeInMs = session.getIdleTimeInMs();
+        if (idleTimeInMs < SESSION_TIMEOUT_MS) {
+            LOGGER.trace("idle time {}ms, {}", idleTimeInMs, session.getSessionId());
+            return true;
+        } else {
+            LOGGER.info("timeout inactive {}ms, closing connection {}", idleTimeInMs, session.getSessionId());
+            return false;
         }
     }
 

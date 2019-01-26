@@ -39,6 +39,7 @@ public class HandshakeSessionHandler {
     @Command(pattern = "BYE MATE!", goodbye = true)
     public ExecResult closeSession(Session session) {
         String out = formatter.format(MESSAGE_GOOD_BYE.getValue(), session.getClientName(), session.getSessionTimeInMs());
+        session.setGoodByeSaidFlag();
         return ExecResult.terminate(out);
     }
 

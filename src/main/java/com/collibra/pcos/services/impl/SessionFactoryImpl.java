@@ -14,7 +14,6 @@ public class SessionFactoryImpl implements SessionFactory {
     public Session createNewSession() {
         String nextSessionId = idGenerator.newSessionIdentifier();
         Session newSession = new Session(nextSessionId);
-        newSession.startSessionWatchDog();
         return newSession;
     }
 

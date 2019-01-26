@@ -23,10 +23,10 @@ public class ApplicationContext {
     }
 
     private static void createBeans() {
-        BEANS.put("appServer", new AppServer());
-        BEANS.put("messageFormatter", MessageUtils.getMessageFormatter());
         BEANS.put("idGenerator", new UuidBasedSessionIdGenerator());
         BEANS.put("sessionFactory", new SessionFactoryImpl());
+        BEANS.put("appServer", new AppServer());
+        BEANS.put("messageFormatter", MessageUtils.getMessageFormatter());
         BEANS.put("graph", directed().allowsParallelEdges(true).allowsSelfLoops(true).build());
         BEANS.put("graphAlgorithm", new ShortestPathsGraphTraversalImpl());
         BEANS.put("graphService", new GraphServiceImpl());

@@ -3,8 +3,9 @@ package com.collibra.pcos.graph;
 import com.google.common.graph.Network;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
-import java.util.PriorityQueue;
+import java.util.Queue;
 
 import static java.lang.Integer.MAX_VALUE;
 
@@ -13,7 +14,7 @@ public class ShortestPathsGraphTraversalImpl implements ShortestPathsAlgorithm<S
     @Override
     public Map<String, Integer> getMinWeightMap(Network<String, Edge> graph, String nodeFrom) {
         final Map<String, Integer> minWeightsMap = new HashMap<>();
-        final PriorityQueue<String> nodesToCheck = new PriorityQueue<>();
+        final Queue<String> nodesToCheck = new LinkedList<>();
 
         minWeightsMap.put(nodeFrom, 0);     // entry point to start
         nodesToCheck.add(nodeFrom);         // from nodeFrom
